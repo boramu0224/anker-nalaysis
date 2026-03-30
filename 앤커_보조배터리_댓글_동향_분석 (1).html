@@ -1,0 +1,412 @@
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디에디트 x 앤커 프라임 보조배터리 댓글 동향 분석</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f6f8; color: #1a1a2e; line-height: 1.7; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; border-radius: 16px; padding: 40px; margin-bottom: 32px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .sub { font-size: 14px; color: #a0aec0; margin-bottom: 20px; }
+  .header .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+  .header .meta span { font-size: 13px; color: #cbd5e0; }
+  .header .meta strong { color: #63b3ed; }
+
+  .section { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .section h2 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e8ecf0; display: flex; align-items: center; gap: 8px; }
+  .section h2 .num { background: #0f3460; color: #fff; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* KPI cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+  .kpi-card { background: #f8fafc; border-radius: 10px; padding: 20px 16px; text-align: center; border: 1px solid #e8ecf0; }
+  .kpi-card .val { font-size: 28px; font-weight: 800; color: #0f3460; }
+  .kpi-card .label { font-size: 12px; color: #718096; margin-top: 4px; }
+
+  /* Timeline chart */
+  .timeline { margin-top: 4px; }
+  .tl-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tl-label { font-size: 12px; color: #718096; width: 70px; flex-shrink: 0; text-align: right; }
+  .tl-bar-wrap { flex: 1; background: #f0f4f8; border-radius: 4px; height: 22px; overflow: hidden; }
+  .tl-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; color: #fff; font-weight: 600; transition: width 0.3s; }
+  .tl-bar.peak { background: linear-gradient(90deg, #e53e3e, #fc8181); }
+  .tl-bar.high { background: linear-gradient(90deg, #dd6b20, #f6ad55); }
+  .tl-bar.mid { background: linear-gradient(90deg, #2b6cb0, #63b3ed); }
+  .tl-bar.low { background: linear-gradient(90deg, #276749, #68d391); }
+  .tl-count { font-size: 12px; color: #4a5568; width: 40px; text-align: right; flex-shrink: 0; }
+
+  /* Donut / category */
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .cat-grid { grid-template-columns: 1fr; } }
+  .cat-item { display: flex; align-items: center; gap: 12px; background: #f8fafc; border-radius: 8px; padding: 14px 16px; }
+  .cat-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .cat-info { flex: 1; }
+  .cat-name { font-size: 13px; font-weight: 600; color: #2d3748; }
+  .cat-bar-wrap { background: #e8ecf0; border-radius: 3px; height: 5px; margin-top: 5px; }
+  .cat-bar { height: 5px; border-radius: 3px; }
+  .cat-count { font-size: 13px; font-weight: 700; color: #4a5568; }
+
+  /* Keyword bubbles */
+  .kw-section { margin-bottom: 16px; }
+  .kw-section h3 { font-size: 13px; font-weight: 600; color: #718096; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kw-bubbles { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kw-bubble { border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 500; }
+  .kw-pos { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+  .kw-neg { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+  .kw-event { background: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
+  .kw-prod { background: #faf5ff; color: #553c9a; border: 1px solid #e9d8fd; }
+  .kw-bubble span { font-size: 11px; opacity: 0.7; margin-left: 4px; }
+
+  /* Insight cards */
+  .insight-grid { display: grid; gap: 12px; }
+  .insight-card { border-left: 4px solid; border-radius: 0 8px 8px 0; padding: 14px 16px; background: #f8fafc; }
+  .insight-card.strength { border-color: #38a169; }
+  .insight-card.warning { border-color: #e53e3e; }
+  .insight-card.info { border-color: #3182ce; }
+  .insight-card.tip { border-color: #d69e2e; }
+  .insight-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .insight-card.strength .insight-title { color: #276749; }
+  .insight-card.warning .insight-title { color: #c53030; }
+  .insight-card.info .insight-title { color: #2b6cb0; }
+  .insight-card.tip .insight-title { color: #b7791f; }
+  .insight-body { font-size: 13px; color: #4a5568; }
+
+  /* Quotes */
+  .quote-list { display: grid; gap: 8px; }
+  .quote { background: #f8fafc; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #4a5568; border-left: 3px solid #cbd5e0; }
+  .quote::before { content: '"'; color: #a0aec0; margin-right: 4px; }
+  .quote::after { content: '"'; color: #a0aec0; margin-left: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f0f4f8; color: #4a5568; font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 1px solid #e8ecf0; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f4f8; color: #2d3748; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+
+  .footer { text-align: center; font-size: 12px; color: #a0aec0; margin-top: 40px; }
+
+  /* Download buttons */
+  .dl-bar { position: fixed; bottom: 28px; right: 28px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+  .dl-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap; }
+  .dl-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .dl-btn.html { background: #0f3460; color: #fff; }
+  .dl-btn.pdf  { background: #fff; color: #0f3460; border: 2px solid #0f3460; }
+  .dl-btn svg  { width: 16px; height: 16px; flex-shrink: 0; }
+  @media print { .dl-bar { display: none; } }
+</style>
+</head>
+<body>
+<div class="dl-bar">
+  <button class="dl-btn html" onclick="downloadHTML()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+    HTML 다운로드
+  </button>
+  <button class="dl-btn pdf" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    PDF로 저장
+  </button>
+</div>
+<script>
+function downloadHTML() {
+  const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '앤커_보조배터리_댓글_동향_분석.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>디에디트 x 앤커 프라임 보조배터리<br>유튜브 댓글 동향 분석</h1>
+    <div class="sub">이 보조배터리 쓰고 인생이 바뀌었음;;;ㅠㅠ — THE EDIT</div>
+    <div class="meta">
+      <span>분석 기간 <strong>2026.03.20 ~ 03.30</strong></span>
+      <span>데이터 기준 <strong>유튜브 댓글 1,006개</strong></span>
+      <span>작성일 <strong>2026.03.30</strong></span>
+    </div>
+  </div>
+
+  <!-- 1. 기본 현황 -->
+  <div class="section">
+    <h2><span class="num">1</span> 기본 현황</h2>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="val">1,006</div>
+        <div class="label">전체 댓글 수</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">999</div>
+        <div class="label">고유 작성자 수</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">128</div>
+        <div class="label">댓글 총 좋아요</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">73</div>
+        <div class="label">단일 댓글 최대 좋아요</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">45</div>
+        <div class="label">기존 앤커 사용자</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">39</div>
+        <div class="label">구독·좋아요·알림 언급</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 날짜별 댓글 추이 -->
+  <div class="section">
+    <h2><span class="num">2</span> 날짜별 댓글 추이</h2>
+    <div class="timeline">
+      <div class="tl-row">
+        <div class="tl-label">03.20 (목)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:0.3%">1</div></div>
+        <div class="tl-count">1개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.23 (일)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:7.5%">30</div></div>
+        <div class="tl-count">30개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.24 (월)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar peak" style="width:99.5%">398</div></div>
+        <div class="tl-count">398개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.25 (화)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar high" style="width:46%">184</div></div>
+        <div class="tl-count">184개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.26 (수)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar mid" style="width:35.6%">142</div></div>
+        <div class="tl-count">142개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.27 (목)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar mid" style="width:22.6%">90</div></div>
+        <div class="tl-count">90개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.28 (금)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar mid" style="width:22.6%">90</div></div>
+        <div class="tl-count">90개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.29 (토)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:16.3%">65</div></div>
+        <div class="tl-count">65개</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03.30 (일)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:1.5%">6</div></div>
+        <div class="tl-count">6개 (진행중)</div>
+      </div>
+    </div>
+    <p style="margin-top:14px; font-size:12px; color:#718096;">* 3월 24일(월) 이벤트 알림 발송 또는 커뮤니티 공유 효과로 추정되는 급증 후 자연 감소 패턴</p>
+  </div>
+
+  <!-- 3. 댓글 토픽 분류 -->
+  <div class="section">
+    <h2><span class="num">3</span> 댓글 토픽 분류</h2>
+    <div class="cat-grid">
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#e53e3e;"></div>
+        <div class="cat-info">
+          <div class="cat-name">가격·부담 우려</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:15.3%; background:#e53e3e;"></div></div>
+        </div>
+        <div class="cat-count">154개<br><span style="font-size:11px; color:#a0aec0;">15.3%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#38a169;"></div>
+        <div class="cat-info">
+          <div class="cat-name">제품 긍정 / 구매 욕구</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:14.4%; background:#38a169;"></div></div>
+        </div>
+        <div class="cat-count">145개<br><span style="font-size:11px; color:#a0aec0;">14.4%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#3182ce;"></div>
+        <div class="cat-info">
+          <div class="cat-name">제품 기능 언급</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:14.0%; background:#3182ce;"></div></div>
+        </div>
+        <div class="cat-count">141개<br><span style="font-size:11px; color:#a0aec0;">14.0%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#d69e2e;"></div>
+        <div class="cat-info">
+          <div class="cat-name">이벤트·당첨 희망</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:10.5%; background:#d69e2e;"></div></div>
+        </div>
+        <div class="cat-count">106개<br><span style="font-size:11px; color:#a0aec0;">10.5%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#a0aec0;"></div>
+        <div class="cat-info">
+          <div class="cat-name">기타 (감사·호응 등)</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:45.7%; background:#a0aec0;"></div></div>
+        </div>
+        <div class="cat-count">459개<br><span style="font-size:11px; color:#a0aec0;">45.7%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 주요 키워드 빈도 -->
+  <div class="section">
+    <h2><span class="num">4</span> 주요 키워드 출현 빈도</h2>
+
+    <div class="kw-section">
+      <h3>제품 관련</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-prod">보조배터리 <span>277</span></div>
+        <div class="kw-bubble kw-prod">앤커 <span>187</span></div>
+        <div class="kw-bubble kw-prod">충전 <span>180</span></div>
+        <div class="kw-bubble kw-prod">케이블 <span>61</span></div>
+        <div class="kw-bubble kw-prod">파워뱅크 <span>22</span></div>
+        <div class="kw-bubble kw-prod">내장 <span>27</span></div>
+        <div class="kw-bubble kw-prod">스트랩 <span>8</span></div>
+      </div>
+    </div>
+
+    <div class="kw-section" style="margin-top:16px;">
+      <h3>긍정 / 구매 욕구</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-pos">감사 <span>93</span></div>
+        <div class="kw-bubble kw-pos">좋아 <span>70</span></div>
+        <div class="kw-bubble kw-pos">필요 <span>52</span></div>
+        <div class="kw-bubble kw-pos">갖고싶 <span>47</span></div>
+        <div class="kw-bubble kw-pos">탐나 <span>43</span></div>
+        <div class="kw-bubble kw-pos">구매 <span>34</span></div>
+        <div class="kw-bubble kw-pos">갖고 싶 <span>32</span></div>
+        <div class="kw-bubble kw-pos">좋네 <span>32</span></div>
+        <div class="kw-bubble kw-pos">사고싶 <span>24</span></div>
+        <div class="kw-bubble kw-pos">최고 <span>22</span></div>
+        <div class="kw-bubble kw-pos">편해 <span>11</span></div>
+      </div>
+    </div>
+
+    <div class="kw-section" style="margin-top:16px;">
+      <h3>부정 / 우려</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-neg">비싸 <span>48</span></div>
+        <div class="kw-bubble kw-neg">걱정 <span>12</span></div>
+        <div class="kw-bubble kw-neg">불편 <span>7</span></div>
+        <div class="kw-bubble kw-neg">무겁 <span>3</span></div>
+        <div class="kw-bubble kw-neg">단점 <span>2</span></div>
+        <div class="kw-bubble kw-neg">아쉽 <span>2</span></div>
+      </div>
+    </div>
+
+    <div class="kw-section" style="margin-top:16px;">
+      <h3>이벤트</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-event">이벤트 <span>71</span></div>
+        <div class="kw-bubble kw-event">당첨 <span>41</span></div>
+        <div class="kw-bubble kw-event">갖고 싶 <span>32</span></div>
+        <div class="kw-bubble kw-event">가지고 싶 <span>24</span></div>
+        <div class="kw-bubble kw-event">주세요 <span>9</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 주요 반응 상세 -->
+  <div class="section">
+    <h2><span class="num">5</span> 주요 반응 상세</h2>
+
+    <p style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:10px;">좋아요 상위 댓글</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr><th>좋아요</th><th>댓글 내용</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="font-weight:700; color:#e53e3e;">73</td><td>앤커 공식 채널 제품 구매 링크 핀댓글</td></tr>
+        <tr><td style="font-weight:700; color:#dd6b20;">12</td><td>케이블이 내장돼 있어서 따로 챙길 필요 없는 점이 진짜 편해 보이네요. 스트랩 형태라 휴대하기도 괜찮아 보이...</td></tr>
+        <tr><td style="font-weight:700; color:#3182ce;">4</td><td>앤커 성능이야 말해 뭐해지만 이번엔 감성까지 다 때려 박았네요. 당첨 안 되면 쌩돈 주고라도 사고 싶을 정도...</td></tr>
+        <tr><td style="font-weight:700; color:#3182ce;">3</td><td>저 정도 크기면 차량용 배터리 아닌가욬...</td></tr>
+        <tr><td style="font-weight:700; color:#3182ce;">3</td><td>기기들 주렁주렁 달고사는 테크충들에게 단비같은 브랜드 앤커,,,, 진짜 섹시 배터리다 이거예요,,,</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:10px;">가격 부담 대표 댓글</p>
+    <div class="quote-list" style="margin-bottom:20px;">
+      <div class="quote">비싸긴 하지만 보조배터리는 확실히 좋은게 좋더라고요</div>
+      <div class="quote">솔직히 엔커는 가격만 아니라면 단점이 크게 없음 성능이면 성능 기능성이면 기능성 — 다만 가격이 좀 비싸..</div>
+      <div class="quote">사고싶다 사고싶다 했지만 가격이 비싸서 망설였는데 이벤트라뇨~~ 응모합니다!</div>
+      <div class="quote">엔커 보조 배터리 항상 가격이 발목을 잡았었는데..! 좋은 이벤트 감사드려요</div>
+    </div>
+
+    <p style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:10px;">기능 관심 대표 댓글</p>
+    <div class="quote-list">
+      <div class="quote">케이블 내장형 좋긴한데 내구성이 어떨지 궁금하네요</div>
+      <div class="quote">데스크테리어 하려구 충전스테이션 알아보고있었는데 앤커 파워뱅크+크래들 조합으로 해도 좋겠는데요??</div>
+      <div class="quote">이거 저도 쓰고있는데 최고에요~!! 26500 쓰고있어요~!</div>
+      <div class="quote">이제 벨킨에서 엔커로 갈게</div>
+    </div>
+  </div>
+
+  <!-- 6. 피드백 및 궁금증 -->
+  <div class="section">
+    <h2><span class="num">6</span> 유저 피드백 및 궁금증 (21건)</h2>
+    <table>
+      <thead>
+        <tr><th>유형</th><th>내용</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>내구성 우려</td><td>내장 케이블 장기 내구성에 대한 불안 언급</td></tr>
+        <tr><td>경쟁 제품 비교</td><td>Shargeek 대비 차이점 문의</td></tr>
+        <tr><td>모델 선택 고민</td><td>26,250mAh vs 20,100mAh, 실버 vs 그레이 가격 차이(약 6만원)</td></tr>
+        <tr><td>노트북 호환성</td><td>노트북 충전 성능 한계 여부 언급</td></tr>
+        <tr><td>충전 스테이션</td><td>파워뱅크 + 크래들 조합 활용 방안 문의</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. Brand 전략 인사이트 -->
+  <div class="section">
+    <h2><span class="num">7</span> Brand 전략 인사이트</h2>
+    <div class="insight-grid">
+      <div class="insight-card warning">
+        <div class="insight-title">전환 장벽 1위 — 가격</div>
+        <div class="insight-body">명시적 '비싸' 언급 46건, 가격 관련 카테고리 154건(15.3%). 할인 이벤트·쿠폰·번들 프로모션 시 전환율이 즉각 반응하는 패턴. 이벤트 댓글에도 가격 언급이 혼재돼 가격 민감도가 매우 높음.</div>
+      </div>
+      <div class="insight-card strength">
+        <div class="insight-title">이벤트 구조가 효과적</div>
+        <div class="insight-body">이벤트 참여 댓글(106건)이 단순 응모에 그치지 않고 제품 인지·욕구 표현을 동반. 구독·좋아요·알림 언급 39건 — 채널 인게이지먼트 지표 직접 견인.</div>
+      </div>
+      <div class="insight-card info">
+        <div class="insight-title">내장 케이블이 핵심 차별화 포인트</div>
+        <div class="insight-body">케이블 내장에 대한 긍정 반응이 두드러지나 내구성 우려도 동반. 내구성 테스트 콘텐츠 또는 보증 정책 강조로 불안 해소 가능.</div>
+      </div>
+      <div class="insight-card strength">
+        <div class="insight-title">기존 사용자 충성도 높음</div>
+        <div class="insight-body">기존 앤커 사용자 45명이 댓글 작성. "써봤는데 대만족", "최고", "타사에서 앤커로 넘어간다" 등 자발적 옹호 의견 다수. UGC 리뷰·사용 후기 캠페인에 활용 가능.</div>
+      </div>
+      <div class="insight-card tip">
+        <div class="insight-title">경쟁 브랜드 거론 거의 없음</div>
+        <div class="insight-body">삼성, 샤오미, 벨킨, 다이소 각 1건 수준으로 사실상 경쟁 비교 없음. 앤커 브랜드 자체가 카테고리 기준점으로 인식되는 시그널.</div>
+      </div>
+      <div class="insight-card tip">
+        <div class="insight-title">3월 24일 급증 메커니즘 확인 필요</div>
+        <div class="insight-body">업로드(03.20) 후 4일간 31건에 그치다가 03.24에 398건 급증. 유튜브 알림 발송, SNS 공유, 커뮤니티 유입 등 유입 경로 확인 후 반복 활용 검토.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    분석 기준 : 2026.03.30 | 원본 데이터 : 디에디트 THE EDIT 유튜브 댓글 1,006건
+  </div>
+
+</div>
+
+
+</body></html>
