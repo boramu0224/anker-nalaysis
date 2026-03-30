@@ -1,0 +1,531 @@
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE EDIT × Anker Prime 充電器 YouTubeコメント動向分析</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; background: #f5f6f8; color: #1a1a2e; line-height: 1.8; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; border-radius: 16px; padding: 40px; margin-bottom: 32px; }
+  .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; line-height: 1.5; }
+  .header .sub { font-size: 13px; color: #a0aec0; margin-bottom: 20px; }
+  .header .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+  .header .meta span { font-size: 13px; color: #cbd5e0; }
+  .header .meta strong { color: #63b3ed; }
+
+  .section { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .section h2 { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e8ecf0; display: flex; align-items: center; gap: 8px; }
+  .section h2 .num { background: #0f3460; color: #fff; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+  .kpi-card { background: #f8fafc; border-radius: 10px; padding: 20px 16px; text-align: center; border: 1px solid #e8ecf0; }
+  .kpi-card .val { font-size: 28px; font-weight: 800; color: #0f3460; }
+  .kpi-card .label { font-size: 12px; color: #718096; margin-top: 4px; }
+
+  .timeline { margin-top: 4px; }
+  .tl-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tl-label { font-size: 12px; color: #718096; width: 80px; flex-shrink: 0; text-align: right; }
+  .tl-bar-wrap { flex: 1; background: #f0f4f8; border-radius: 4px; height: 22px; overflow: hidden; }
+  .tl-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; color: #fff; font-weight: 600; }
+  .tl-bar.peak { background: linear-gradient(90deg, #e53e3e, #fc8181); }
+  .tl-bar.high { background: linear-gradient(90deg, #dd6b20, #f6ad55); }
+  .tl-bar.mid { background: linear-gradient(90deg, #2b6cb0, #63b3ed); }
+  .tl-bar.low { background: linear-gradient(90deg, #276749, #68d391); }
+  .tl-count { font-size: 12px; color: #4a5568; width: 60px; text-align: right; flex-shrink: 0; }
+
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .cat-grid { grid-template-columns: 1fr; } }
+  .cat-item { display: flex; align-items: center; gap: 12px; background: #f8fafc; border-radius: 8px; padding: 14px 16px; }
+  .cat-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .cat-info { flex: 1; }
+  .cat-name { font-size: 13px; font-weight: 600; color: #2d3748; }
+  .cat-bar-wrap { background: #e8ecf0; border-radius: 3px; height: 5px; margin-top: 5px; }
+  .cat-bar { height: 5px; border-radius: 3px; }
+  .cat-count { font-size: 13px; font-weight: 700; color: #4a5568; white-space: nowrap; }
+
+  .kw-section { margin-bottom: 16px; }
+  .kw-section h3 { font-size: 12px; font-weight: 600; color: #718096; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kw-bubbles { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kw-bubble { border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 500; }
+  .kw-pos { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+  .kw-neg { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+  .kw-event { background: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
+  .kw-prod { background: #faf5ff; color: #553c9a; border: 1px solid #e9d8fd; }
+  .kw-bubble span { font-size: 11px; opacity: 0.7; margin-left: 4px; }
+
+  .insight-grid { display: grid; gap: 12px; }
+  .insight-card { border-left: 4px solid; border-radius: 0 8px 8px 0; padding: 14px 16px; background: #f8fafc; }
+  .insight-card.strength { border-color: #38a169; }
+  .insight-card.warning { border-color: #e53e3e; }
+  .insight-card.info { border-color: #3182ce; }
+  .insight-card.tip { border-color: #d69e2e; }
+  .insight-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .insight-card.strength .insight-title { color: #276749; }
+  .insight-card.warning .insight-title { color: #c53030; }
+  .insight-card.info .insight-title { color: #2b6cb0; }
+  .insight-card.tip .insight-title { color: #b7791f; }
+  .insight-body { font-size: 13px; color: #4a5568; }
+
+  .quote-list { display: grid; gap: 8px; }
+  .quote { background: #f8fafc; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #4a5568; border-left: 3px solid #cbd5e0; }
+  .quote .orig { font-size: 11px; color: #a0aec0; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f0f4f8; color: #4a5568; font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 1px solid #e8ecf0; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f4f8; color: #2d3748; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-red { background: #fff5f5; color: #c53030; }
+  .badge-green { background: #f0fff4; color: #276749; }
+  .badge-blue { background: #ebf8ff; color: #2b6cb0; }
+
+  .footer { text-align: center; font-size: 12px; color: #a0aec0; margin-top: 40px; }
+  .note { font-size: 12px; color: #718096; margin-top: 12px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 10px 14px; }
+
+  /* Download buttons */
+  .dl-bar { position: fixed; bottom: 28px; right: 28px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+  .dl-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap; }
+  .dl-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .dl-btn.html { background: #0f3460; color: #fff; }
+  .dl-btn.pdf  { background: #fff; color: #0f3460; border: 2px solid #0f3460; }
+  .dl-btn svg  { width: 16px; height: 16px; flex-shrink: 0; }
+  @media print { .dl-bar { display: none; } }
+</style>
+</head>
+<body>
+<div class="dl-bar">
+  <button class="dl-btn html" onclick="downloadHTML()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+    HTMLダウンロード
+  </button>
+  <button class="dl-btn pdf" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    PDFで保存
+  </button>
+</div>
+<script>
+function downloadHTML() {
+  const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Anker_PowerBank_Comment_Analysis_JP.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>THE EDIT × Anker Prime モバイルバッテリー<br>YouTubeコメント動向分析レポート</h1>
+    <div class="sub">動画タイトル：このモバイルバッテリーで人生が変わった;;;ㅠㅠ — 디에디트 THE EDIT（韓国YouTubeチャンネル）</div>
+    <div class="meta">
+      <span>分析期間 <strong>2026.03.20 〜 03.30</strong></span>
+      <span>データ件数 <strong>コメント 1,006件</strong></span>
+      <span>作成日 <strong>2026.03.30</strong></span>
+    </div>
+  </div>
+
+  <!-- チャンネル説明 -->
+  <div class="section">
+    <h2><span class="num">0</span> 対象チャンネル・動画について</h2>
+    <table>
+      <tbody>
+        <tr><th style="width:160px;">チャンネル名</th><td>디에디트 THE EDIT（韓国のライフスタイル・テックレビュー専門YouTubeチャンネル）</td></tr>
+        <tr><th>動画内容</th><td>Anker Prime モバイルバッテリー（26,250mAh / 20,100mAh）および充電ステーションのレビュー＋プレゼントキャンペーン</td></tr>
+        <tr><th>分析対象</th><td>当該動画に投稿された韓国語コメント全件</td></tr>
+        <tr><th>ブランド関与</th><td>@the-edit アカウントによる購入リンク掲載ピン留めコメント 1件のみ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 1. 基本概要 -->
+  <div class="section">
+    <h2><span class="num">1</span> 基本概要</h2>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="val">1,006</div>
+        <div class="label">総コメント数</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">999</div>
+        <div class="label">ユニーク投稿者数</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">128</div>
+        <div class="label">コメントへの総いいね数</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">73</div>
+        <div class="label">単一コメント最大いいね</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">45</div>
+        <div class="label">既存Ankerユーザーの投稿</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">39</div>
+        <div class="label">登録・いいね・通知 言及数</div>
+      </div>
+    </div>
+    <p class="note">* ユニーク投稿者999名に対してコメントは1,006件。1人1コメントに近く、新規ユーザーの流入が多いことを示す。</p>
+  </div>
+
+  <!-- 2. 日別コメント推移 -->
+  <div class="section">
+    <h2><span class="num">2</span> 日別コメント推移</h2>
+    <div class="timeline">
+      <div class="tl-row">
+        <div class="tl-label">03/20 (木)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:0.3%">1</div></div>
+        <div class="tl-count">1件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/23 (日)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:7.5%">30</div></div>
+        <div class="tl-count">30件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/24 (月)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar peak" style="width:99.5%">398</div></div>
+        <div class="tl-count"><strong style="color:#e53e3e;">398件</strong></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/25 (火)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar high" style="width:46%">184</div></div>
+        <div class="tl-count">184件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/26 (水)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar mid" style="width:35.6%">142</div></div>
+        <div class="tl-count">142件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/27 (木)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar mid" style="width:22.6%">90</div></div>
+        <div class="tl-count">90件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/28 (金)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar mid" style="width:22.6%">90</div></div>
+        <div class="tl-count">90件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/29 (土)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:16.3%">65</div></div>
+        <div class="tl-count">65件</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-label">03/30 (日)</div>
+        <div class="tl-bar-wrap"><div class="tl-bar low" style="width:1.5%">6</div></div>
+        <div class="tl-count">6件 (集計中)</div>
+      </div>
+    </div>
+    <p class="note">3月24日（月）に急増。動画公開から4日間の累計31件に対し、24日1日だけで398件（全体の約40%）が投稿された。YouTubeの通知配信タイミングまたはSNSでの拡散と連動した可能性が高い。</p>
+  </div>
+
+  <!-- 3. コメントトピック分類 -->
+  <div class="section">
+    <h2><span class="num">3</span> コメントトピック分類</h2>
+    <div class="cat-grid">
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#e53e3e;"></div>
+        <div class="cat-info">
+          <div class="cat-name">価格・費用への懸念</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:15.3%; background:#e53e3e;"></div></div>
+        </div>
+        <div class="cat-count">154件<br><span style="font-size:11px; color:#a0aec0;">15.3%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#38a169;"></div>
+        <div class="cat-info">
+          <div class="cat-name">製品ポジティブ・購買意欲</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:14.4%; background:#38a169;"></div></div>
+        </div>
+        <div class="cat-count">145件<br><span style="font-size:11px; color:#a0aec0;">14.4%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#3182ce;"></div>
+        <div class="cat-info">
+          <div class="cat-name">製品機能への言及・質問</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:14.0%; background:#3182ce;"></div></div>
+        </div>
+        <div class="cat-count">141件<br><span style="font-size:11px; color:#a0aec0;">14.0%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#d69e2e;"></div>
+        <div class="cat-info">
+          <div class="cat-name">キャンペーン・当選希望</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:10.5%; background:#d69e2e;"></div></div>
+        </div>
+        <div class="cat-count">106件<br><span style="font-size:11px; color:#a0aec0;">10.5%</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#a0aec0;"></div>
+        <div class="cat-info">
+          <div class="cat-name">その他（お礼・反応など）</div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:45.7%; background:#a0aec0;"></div></div>
+        </div>
+        <div class="cat-count">459件<br><span style="font-size:11px; color:#a0aec0;">45.7%</span></div>
+      </div>
+    </div>
+    <p class="note">購買意欲(14.4%)と価格懸念(15.3%)がほぼ同数。製品への関心は高いが価格がコンバージョンの壁となっている構図が明確。</p>
+  </div>
+
+  <!-- 4. キーワード頻度 -->
+  <div class="section">
+    <h2><span class="num">4</span> 主要キーワード出現頻度</h2>
+
+    <div class="kw-section">
+      <h3>製品関連</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-prod">モバイルバッテリー <span>277回</span></div>
+        <div class="kw-bubble kw-prod">Anker <span>187回</span></div>
+        <div class="kw-bubble kw-prod">充電 <span>180回</span></div>
+        <div class="kw-bubble kw-prod">ケーブル <span>61回</span></div>
+        <div class="kw-bubble kw-prod">パワーバンク <span>22回</span></div>
+        <div class="kw-bubble kw-prod">内蔵 <span>27回</span></div>
+        <div class="kw-bubble kw-prod">ストラップ <span>8回</span></div>
+      </div>
+    </div>
+
+    <div class="kw-section" style="margin-top:16px;">
+      <h3>ポジティブ / 購買意欲</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-pos">ありがとう <span>93回</span></div>
+        <div class="kw-bubble kw-pos">いい・好き <span>70回</span></div>
+        <div class="kw-bubble kw-pos">必要 <span>52回</span></div>
+        <div class="kw-bubble kw-pos">欲しい <span>79回</span></div>
+        <div class="kw-bubble kw-pos">気になる・欲しい <span>50回</span></div>
+        <div class="kw-bubble kw-pos">購入 <span>34回</span></div>
+        <div class="kw-bubble kw-pos">買いたい <span>24回</span></div>
+        <div class="kw-bubble kw-pos">最高 <span>22回</span></div>
+        <div class="kw-bubble kw-pos">便利 <span>11回</span></div>
+      </div>
+    </div>
+
+    <div class="kw-section" style="margin-top:16px;">
+      <h3>ネガティブ / 懸念</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-neg">高い（価格） <span>48回</span></div>
+        <div class="kw-bubble kw-neg">心配・不安 <span>12回</span></div>
+        <div class="kw-bubble kw-neg">不便 <span>7回</span></div>
+        <div class="kw-bubble kw-neg">重い <span>3回</span></div>
+        <div class="kw-bubble kw-neg">デメリット <span>2回</span></div>
+        <div class="kw-bubble kw-neg">残念 <span>2回</span></div>
+      </div>
+    </div>
+
+    <div class="kw-section" style="margin-top:16px;">
+      <h3>キャンペーン関連</h3>
+      <div class="kw-bubbles">
+        <div class="kw-bubble kw-event">イベント <span>71回</span></div>
+        <div class="kw-bubble kw-event">当選 <span>41回</span></div>
+        <div class="kw-bubble kw-event">欲しい <span>56回</span></div>
+        <div class="kw-bubble kw-event">ください <span>9回</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 注目コメント -->
+  <div class="section">
+    <h2><span class="num">5</span> 注目コメント抜粋</h2>
+
+    <p style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:10px;">いいね数上位コメント</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr><th style="width:80px;">いいね数</th><th>内容（日本語訳）</th><th style="width:80px;">評価</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:700; color:#e53e3e; font-size:16px;">73</td>
+          <td>Anker公式チャンネルによる製品購入リンクのピン留めコメント</td>
+          <td><span class="badge badge-blue">公式</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; color:#dd6b20; font-size:16px;">12</td>
+          <td>「ケーブルが内蔵されているので別途持ち歩く必要がないのが本当に便利そうですね。ストラップ形式で携帯しやすそう」</td>
+          <td><span class="badge badge-green">機能評価</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; color:#3182ce; font-size:14px;">4</td>
+          <td>「Ankerの性能は言わずもがな。今回はデザインも完璧。当たらなくてもお金出して買いたいレベル」</td>
+          <td><span class="badge badge-green">高評価</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; color:#3182ce; font-size:14px;">3</td>
+          <td>「そのサイズはもはや車載バッテリーじゃないのw」（サイズに驚くユーモアコメント）</td>
+          <td><span class="badge badge-blue">反応</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:10px;">価格懸念の代表コメント（原文訳）</p>
+    <div class="quote-list" style="margin-bottom:20px;">
+      <div class="quote">
+        高いけど、モバイルバッテリーは確かにいいものを使ったほうがいい
+        <div class="orig">원문：비싸긴 하지만 보조배터리는 확실히 좋은게 좋더라고요</div>
+      </div>
+      <div class="quote">
+        Ankerは価格さえ除けばデメリットはほぼない。性能も機能性も申し分ないが、とにかく高い…
+        <div class="orig">원문：솔직히 엔커는 가격만 아니라면 단점이 크게 없음</div>
+      </div>
+      <div class="quote">
+        ずっと欲しかったけど価格が高くて迷っていたところ、キャンペーンとは！応募します！
+        <div class="orig">원문：사고싶다 사고싶다 했지만 가격이 비싸서 망설였는데 이벤트라뇨~~ 응모합니다!</div>
+      </div>
+      <div class="quote">
+        Ankerのモバイルバッテリーはいつも価格がネックで…いいキャンペーンありがとうございます
+        <div class="orig">원문：앤커 보조 배터리 항상 가격이 발목을 잡았었는데..! 좋은 이벤트 감사드려요</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:10px;">機能への関心・既存ユーザー代表コメント（原文訳）</p>
+    <div class="quote-list">
+      <div class="quote">
+        ケーブル内蔵型はいいけど、耐久性はどうなんだろう
+        <div class="orig">원문：케이블 내장형 좋긴한데 내구성이 어떨지 궁금하네요</div>
+      </div>
+      <div class="quote">
+        デスクアクセサリー探していたけど、Ankerパワーバンク＋クレードルの組み合わせよさそう！
+        <div class="orig">원문：데스크테리어 하려구 충전스테이션 알아보고있었는데 앤커 파워뱅크+크래들 조합으로 해도 좋겠는데요??</div>
+      </div>
+      <div class="quote">
+        これ今使ってるけど最高ですよ〜！26,500使ってます！
+        <div class="orig">원문：이거 저도 쓰고있는데 최고에요~!! 26500 쓰고있어요~!</div>
+      </div>
+      <div class="quote">
+        BelkinからAnkerに乗り換えます
+        <div class="orig">원문：이제 벨킨에서 엔커로 갈게</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. ユーザーフィードバック -->
+  <div class="section">
+    <h2><span class="num">6</span> ユーザーフィードバック・疑問点（21件）</h2>
+    <table>
+      <thead>
+        <tr><th>カテゴリ</th><th>主な内容</th><th>対応優先度</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>耐久性の懸念</td>
+          <td>内蔵ケーブルの長期耐久性への不安が複数件</td>
+          <td><span class="badge badge-red">高</span></td>
+        </tr>
+        <tr>
+          <td>競合製品との比較</td>
+          <td>Shargeekとの違いに関する質問</td>
+          <td><span class="badge badge-blue">中</span></td>
+        </tr>
+        <tr>
+          <td>モデル選択の悩み</td>
+          <td>26,250mAh vs 20,100mAh の選び方、シルバー vs グレーの価格差（約6万ウォン）</td>
+          <td><span class="badge badge-blue">中</span></td>
+        </tr>
+        <tr>
+          <td>ノートPC互換性</td>
+          <td>ノートPC充電時のパフォーマンスへの疑問</td>
+          <td><span class="badge badge-blue">中</span></td>
+        </tr>
+        <tr>
+          <td>充電ステーション活用</td>
+          <td>パワーバンク＋クレードル組み合わせの使い方の問い合わせ</td>
+          <td><span class="badge badge-green">低</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. 競合ブランド言及 -->
+  <div class="section">
+    <h2><span class="num">7</span> 競合ブランド言及状況</h2>
+    <table>
+      <thead>
+        <tr><th>ブランド</th><th>言及件数</th><th>コメント傾向</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Xiaomi（シャオミ）</td><td>1件</td><td>旧製品使用中 → Anker乗り換え検討</td></tr>
+        <tr><td>Samsung（サムスン）</td><td>1件</td><td>旧モデル使用中 → 試してみたい</td></tr>
+        <tr><td>Belkin（ベルキン）</td><td>1件</td><td>「BelkinからAnkerに乗り換える」と明示</td></tr>
+        <tr><td>Daiso（ダイソー）</td><td>1件</td><td>「ダイソーしか使ったことない → 良いものを試してみたい」</td></tr>
+      </tbody>
+    </table>
+    <p class="note">競合ブランドの言及は計4件のみ。Ankerがモバイルバッテリーカテゴリの基準として認識されており、比較対象として挙げられることがほぼない状況。ブランド認知度の強さを示している。</p>
+  </div>
+
+  <!-- 8. 戦略インサイト -->
+  <div class="section">
+    <h2><span class="num">8</span> ブランド戦略インサイト</h2>
+    <div class="insight-grid">
+      <div class="insight-card warning">
+        <div class="insight-title">コンバージョン障壁 No.1 — 価格</div>
+        <div class="insight-body">「高い」の明示的な言及46件、価格関連カテゴリ合計154件（15.3%）。割引イベント・クーポン・バンドルプロモーションで即座に反応するパターンが確認された。価格感度が非常に高く、「品質は認める、でも高い」というユーザー心理が支配的。</div>
+      </div>
+      <div class="insight-card strength">
+        <div class="insight-title">キャンペーン施策の効果が高い</div>
+        <div class="insight-body">キャンペーン参加コメント106件が単純応募にとどまらず、製品への関心・購買意欲を伴っている。チャンネル登録・いいね・通知設定の言及39件 — キャンペーンがエンゲージメント指標を直接的に牽引。</div>
+      </div>
+      <div class="insight-card info">
+        <div class="insight-title">内蔵ケーブルが最大の差別化ポイント</div>
+        <div class="insight-body">内蔵ケーブルへのポジティブな反応が際立つ一方、耐久性への懸念も複数件確認。耐久性テストコンテンツや保証ポリシーの強調によって購買不安を払拭できる可能性が高い。</div>
+      </div>
+      <div class="insight-card strength">
+        <div class="insight-title">既存ユーザーのブランドロイヤルティが高い</div>
+        <div class="insight-body">既存Ankerユーザー45名が自発的にコメント。「使ってるけど最高」「他社からAnkerに乗り換える」など、ブランド擁護意見が多数。UGCレビュー・ユーザー事例キャンペーンへの活用が有効。</div>
+      </div>
+      <div class="insight-card tip">
+        <div class="insight-title">Ankerはカテゴリの基準ブランドとして認知済み</div>
+        <div class="insight-body">競合ブランドの言及がほぼ皆無（計4件）。ユーザーはAnkerをモバイルバッテリーの「基準」として見ており、比較検討の上位に位置づけられている。</div>
+      </div>
+      <div class="insight-card tip">
+        <div class="insight-title">3月24日急増の要因確認を推奨</div>
+        <div class="insight-body">公開後4日間で31件に留まっていたが、3月24日（月）に398件（全体の約40%）が集中。YouTube通知配信、SNSシェア、コミュニティ流入など、流入経路の特定と再現性の検証を推奨。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. まとめ -->
+  <div class="section">
+    <h2><span class="num">9</span> まとめ</h2>
+    <table>
+      <thead>
+        <tr><th>項目</th><th>内容</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600;">ブランド認知</td>
+          <td>Ankerはカテゴリリーダーとして確固たる認知。競合比較なし</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">購買意欲</td>
+          <td>「欲しい・買いたい・気になる」が約170件 — 潜在需要は非常に高い</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">最大課題</td>
+          <td>価格が購買転換の最大障壁。価格訴求施策が最も有効</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">推奨施策</td>
+          <td>① 割引・クーポン施策の継続 ② 内蔵ケーブル耐久性コンテンツ強化 ③ 既存ユーザーの口コミ活用</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">チャンネル評価</td>
+          <td>THE EDITは高いエンゲージメントを持つチャンネル。コラボ施策として有効</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    分析基準日：2026年3月30日 ｜ 原データ：디에디트 THE EDIT YouTube コメント 1,006件（韓国語）
+  </div>
+
+</div>
+
+
+</body></html>
